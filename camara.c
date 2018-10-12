@@ -140,9 +140,7 @@ int EntitiesFactory::idEntity = 0;
 //Singleton
 class World {
 	private:
-		// deque<Entity*> entities;
-		Entity *entities[10];
-		int i;
+		deque<Entity*> entities;
 		static World* world;
 		World(){}
 	public:
@@ -155,33 +153,24 @@ class World {
 			return world;
 		}
 
-		// deque<Box> 	get_entities(void) 				{return entities;}
+		deque<Entity*> 	get_entities(void) 					{return entities;}
+		void 			set_entities(deque<Entity*> e) 		{entities = e;}
 
 		void addEntity(Entity* entity) {
-			entities[i] = entity;
-			i += 1;
-			// entities.push_back(entity);
+			entities.push_back(entity);
 		}
 
 		void print(){
-			printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-			for (int x = 0; x < i; x++){
-				Entity *e = entities[x];
-				e->print();
+			for (Entity *entity : entities) {
+				entity->print();
 			}
 		}
 
-		void destroy() {
-			
-		}
+		void destroy() {}
 
 		void makeWorld() {
-
-			for (int x = 0; x < i; x ++) {
-				Entity *entity =  entities[x];
-				entity->print();
+			for (Entity *entity : entities) {
 				entity->make();
-
 			}
 		}
 };
