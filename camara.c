@@ -269,7 +269,8 @@ class World {
 		}
 
 		void print(){
-			for (Entity *entity : entities) {
+			for (int i = 0; i<entities.size(); i++) {
+				Entity* entity = entities[i];
 				entity->print();
 			}
 		}
@@ -277,7 +278,8 @@ class World {
 		void destroy() {}
 
 		void makeWorld() {
-			for (Entity *entity : entities) {
+			for (int i = 0; i<entities.size(); i++) {
+				Entity* entity = entities[i];
 				entity->make();
 			}
 		}
@@ -327,7 +329,7 @@ void display(void) {
    	caculateCamRotation();
   
    	glClear(GL_COLOR_BUFFER_BIT);
-   	glColor3f (1.0, 0.0, 0.0);
+   	glColor3f (0.7, 0.0, 0.0);
    	glLoadIdentity ();     
 		   
    	gluLookAt (xCam, yCam, zCam,  								// cam position

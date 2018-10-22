@@ -1,6 +1,6 @@
-game 3d
+# game 3d
 
-compile:
+# compile:
 
 g++ camara.c -o app -lglut -lGLU -lGL
 
