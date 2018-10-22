@@ -373,18 +373,17 @@ static void Key(unsigned char key, int x, int y) {
 }
 
 void SpecialInput(int key, int x, int y){
-switch(key)
-{
+	//Vector unitario para movimientos rotacionales
+	switch(key) {
+		case GLUT_KEY_LEFT:
+			vision.add_xzAngle( -ROTATIONAL_SPEED );
+		break;
+		case GLUT_KEY_RIGHT:
+			vision.add_xzAngle(  ROTATIONAL_SPEED );
+		break;
+	}
 
-case GLUT_KEY_LEFT:
-vision.add_xzAngle( -ROTATIONAL_SPEED );
-break;
-case GLUT_KEY_RIGHT:
-vision.add_xzAngle(  ROTATIONAL_SPEED );
-break;
-}
-
-glutPostRedisplay();
+	glutPostRedisplay();
 }
 
 void reshape (int w, int h) {
