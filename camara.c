@@ -23,13 +23,6 @@ using namespace std;
 #define ROTATE_RIGTH 'e'
 #define ROTATE_LEFT 'q'
 
-class relativeSpace {
-	public:
-		// static Vector3d less(Point3d a, Point3d b) {
-		// 	int x = abs(a.get_x) 
-		// }
-};
-
 class Point3d {
 	private:
 		GLfloat x, y, z;
@@ -57,40 +50,16 @@ class Point3d {
 		}
 };
 
-class Vector3d {
+class Angle {
 	private:
-		GLfloat x;
-		GLfloat y;
-		GLfloat z;
-
-		GLfloat xyAngle;
-		GLfloat xzAngle;
-		GLfloat yzAngle;
+		GLfloat angle;
 	public:
-
-		Vector3d(GLfloat x = 0.0, GLfloat y = 0.0, GLfloat z = 0.0, GLfloat xyAngle = 0.0, GLfloat xzAngle = 0.0, GLfloat yzAngle = 0.0){
-			this->x = x;
-			this->y = y;
-			this->z = z;
-			this->xyAngle = caculateDegrees(xyAngle);
-			this->xzAngle = caculateDegrees(xzAngle);
-			this->yzAngle = caculateDegrees(yzAngle);
+		Angle(GLfloat angle = 0.0) {
+			this->angle = caculateDegrees(angle);
 		}
 
-		GLfloat get_x  		(void) 	{return x;}
-		GLfloat get_y		(void) 	{return y;}
-		GLfloat get_z		(void) 	{return z;}
-		GLfloat get_xyAngle	(void) 	{return xyAngle;}
-		GLfloat get_xzAngle	(void) 	{return xzAngle;}
-		GLfloat get_yzAngle	(void) 	{return yzAngle;}
-
-		void set_x		 (GLfloat x) 		{this->x = x;}
-		void set_y		 (GLfloat y) 		{this->y = y;}
-		void set_z		 (GLfloat z) 		{this->z = z;}
-		void set_xyAngle (GLfloat xyAngle) 	{this->xyAngle = xyAngle;}
-		void set_xzAngle (GLfloat xzAngle) 	{this->xzAngle = xzAngle;}
-		void set_yzAngle (GLfloat yzAngle) 	{this->yzAngle = yzAngle;}
-
+		GLfloat get_angle (void) 	{return this->angle;}
+		void 	set_angle (GLfloat) 	{this->angle = angle;}
 
 		GLfloat caculateDegrees(GLfloat dumbDegrees) {	
 			GLfloat degrees = (dumbDegrees < 0 ? 360: 0) + dumbDegrees;
@@ -98,39 +67,108 @@ class Vector3d {
 			return (GLfloat)degrees;
 		}
 
-		GLfloat toRadians(GLfloat degrees) {
-			return ( degrees * (PI / 180.0) );
+		GLfloat toRadians() {
+			return ( this->angle * (PI / 180.0) );
 		}
 
-		void add_xzAngle(int a) {
-			xzAngle = caculateDegrees(xzAngle + a);
-			GLfloat hip = sqrt(pow(x,2) + pow(z,2));
-			x = cos(toRadians(xzAngle));
-			z = sin(toRadians(xzAngle));
-		}
-		void add_xyAngle(int a) {
-			xyAngle = caculateDegrees(xyAngle + a);
-			GLfloat hip = sqrt(pow(x,2) + pow(y,2));
-			x = cos(toRadians(xyAngle));
-			y = sin(toRadians(xyAngle));
+		void add(Angle a) {
+			this->angle = caculateDegrees(this->angle + a.get_angle());
 		}
 
-		// void add_yzAngle(int a) {
-		// 	yzAngle = caculateDegrees(yzAngle + a);
-		// 	y = yComponent();
-		// 	z = zComponent();
-		// }
+		void less(Angle a) {
+			this->angle = caculateDegrees(this->angle - a.get_angle());
+		}
+};
+
+class Vector3d {
+	private:
+		GLfloat x;
+		GLfloat y;
+		GLfloat z;
+
+		Angle xyAngle;
+		Angle xzAngle;
+		Angle yzAngle;
+	public:
+
+		Vector3d(GLfloat x = 0.0, GLfloat y = 0.0, GLfloat z = 0.0) {
+			this->x = x;
+			this->y = y;
+			this->z = z;
+		}
+
+		Vector3d(Angle xyAngle, Angle xzAngle, Angle yzAngle) {
+			this->xyAngle = xyAngle;
+			this->xzAngle = xzAngle;
+			this->yzAngle = yzAngle;
+			calculateComponents();
+		}
+
+		GLfloat get_x  		(void) 	{return x;}
+		GLfloat get_y		(void) 	{return y;}
+		GLfloat get_z		(void) 	{return z;}
+		Angle get_xyAngle	(void) 	{return xyAngle;}
+		Angle get_xzAngle	(void) 	{return xzAngle;}
+		Angle get_yzAngle	(void) 	{return yzAngle;}
+
+		void set_x		 (GLfloat x) 		{this->x = x;}
+		void set_y		 (GLfloat y) 		{this->y = y;}
+		void set_z		 (GLfloat z) 		{this->z = z;}
+		void set_xyAngle (Angle xyAngle) 	{this->xyAngle = xyAngle;}
+		void set_xzAngle (Angle xzAngle) 	{this->xzAngle = xzAngle;}
+		void set_yzAngle (Angle yzAngle) 	{this->yzAngle = yzAngle;}
+
+		void calculateComponents() {
+			GLfloat xz_angle = xzAngle.toRadians();
+			GLfloat xy_angle = xyAngle.toRadians();
+
+			x = cos(xz_angle);
+			z = sin(xz_angle);
+			y = sin(xy_angle);
+		}
+
+		void calculateAngles() {
+			
+		}
+
+
+		void add_xzAngle(Angle a) {
+			xzAngle.add(a);
+			calculateComponents();
+		}
+
+		void add_xyAngle(Angle a) {
+			xyAngle.add(a);
+			calculateComponents();
+		}
+
+		void add_yzAngle(int a) {
+			yzAngle.add(a);
+			calculateComponents();
+		}
 
 		void print() {
 			cout << "Im an vector\n";
 			cout << "--------------------------------\n";
 			printf("components: (%f, %f, %f)\n", x, y, z);
 
-			printf("xyAngle: %f\n", xyAngle);
-			printf("xzAngle: %f\n", xzAngle);
-			printf("yzAngle: %f\n", yzAngle);
+			printf("xyAngle: %f\n", xyAngle.get_angle());
+			printf("xzAngle: %f\n", xzAngle.get_angle());
+			printf("yzAngle: %f\n", yzAngle.get_angle());
 
 			cout << "--------------------------------\n\n";
+		}
+};
+
+
+class RelativeSpace {
+	public:
+		static Vector3d less(Point3d a, Point3d b) {
+			int x = a.get_x() - b.get_x();
+			int y = a.get_y() - b.get_y();
+			int z = a.get_z() - b.get_z();
+
+			return Vector3d(x, y, z);
 		}
 };
 
@@ -149,14 +187,19 @@ class Entity {
 			isLive = live;
 		}
 
-		Point3d 	get_point(void) 			{return center;}
-		GLboolean 	get_isSolid(void)			{return isSolid;} 
-		void 		set_point(Point3d p) 		{center = p;}
-		void 		set_isSolid(GLboolean s)	{isSolid = s;}
+		Point3d 	get_center	(void) 			{return center;}
+		GLboolean 	get_isSolid (void)			{return isSolid;}
+		GLboolean	get_isLive	(void)			{return isLive;}
+		Vector3d 	get_target	(void)			{return target;}
+
+		void 		set_center	(Point3d center) 	{this->center  = center;}
+		void 		set_isSolid	(GLboolean isSolid)	{this->isSolid = isSolid;}
+		void 		set_isLive	(GLboolean isLive)	{this->isLive  = isLive;}
+		void 		set_target	(Vector3d target)	{this->target  = target;}
 
 		void addTarget(Point3d target) {
 			if (isLive) {
-				// this->target = target;
+				this->target = RelativeSpace::less(target, this->center);
 			}
 		}
 
@@ -291,7 +334,7 @@ World* world = World::getInstance();
 GLenum doubleBuffer;
 GLfloat worldVelocity = 0;
 
-Vector3d vision(0.0, 0.0, -1.0, 0.0, 270.0);
+Vector3d vision(Angle(0.0), Angle(270.0), Angle(0.0) );
 
 GLfloat zCam = 10.0, 
 		xCam = 0.0,
@@ -303,13 +346,6 @@ GLfloat zCam = 10.0,
 
 		yVelocity = 0.0,
 		xzAngle = 270.0;
-
-
-GLfloat caculateDegrees(GLfloat dumbDegrees) {	
-	GLfloat degrees = (dumbDegrees < 0 ? 360: 0) + dumbDegrees;
-	degrees =  (int)degrees % 360;
-	return (GLfloat)degrees;
-}
 
 GLfloat toRadians(GLfloat degrees) {
 	return ( degrees * (PI / 180.0) );
@@ -333,7 +369,7 @@ void display(void) {
    	glLoadIdentity ();     
 		   
    	gluLookAt (xCam, yCam, zCam,  								// cam position
-   			  xEye , yEye, zEye, 	// target's cam 
+   			  xEye , yEye, zEye, 								// target's cam 
 			  0.0, 1.0, 0.0);   								// up
 
 	world->makeWorld();
@@ -417,6 +453,7 @@ void createInitWorld() {
 
 	Entity player 	= EntitiesFactory::entity(Point3d(0.0, 0.0, 10.0)).solid().live();
 	player.addTarget(Point3d(0.0, 0.0, 0.0));
+	player.get_target().print();
 
    	world->addEntity(&box1);
    	world->addEntity(&box2);
@@ -430,7 +467,6 @@ void createInitWorld() {
 	glutReshapeFunc(reshape);
 	glutIdleFunc(display);  
 	glutMainLoop();
-
 }
 
 int main(int argc, char** argv) {
