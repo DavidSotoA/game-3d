@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h> 
+#include <cmath> 
 #include <string.h>
 #include <deque>
 #include <string>
@@ -63,7 +64,7 @@ class Angle {
 
 		GLfloat caculateDegrees(GLfloat dumbDegrees) {	
 			GLfloat degrees = (dumbDegrees < 0 ? 360: 0) + dumbDegrees;
-			degrees =  (int)degrees % 360;
+			degrees =  (int)(round(degrees)) % 360;
 			return (GLfloat)degrees;
 		}
 
@@ -71,12 +72,21 @@ class Angle {
 			return ( this->angle * (PI / 180.0) );
 		}
 
-		void add(Angle a) {
-			this->angle = caculateDegrees(this->angle + a.get_angle());
+
+		static GLfloat toRadians(GLfloat angle) {
+			return ( angle * (PI / 180.0) );
 		}
 
-		void less(Angle a) {
-			this->angle = caculateDegrees(this->angle - a.get_angle());
+		static GLfloat toGrades(GLfloat grades) {
+			return round( grades * (180.0 / PI) ); 
+		}
+
+		Angle add(Angle a) {
+			return Angle(this->angle + a.get_angle());
+		}
+
+		Angle less(Angle a) {
+			return Angle(this->angle - a.get_angle());
 		}
 };
 
@@ -95,6 +105,7 @@ class Vector3d {
 			this->x = x;
 			this->y = y;
 			this->z = z;
+			calculateAngles();
 		}
 
 		Vector3d(Angle xyAngle, Angle xzAngle, Angle yzAngle) {
@@ -111,9 +122,9 @@ class Vector3d {
 		Angle get_xzAngle	(void) 	{return xzAngle;}
 		Angle get_yzAngle	(void) 	{return yzAngle;}
 
-		void set_x		 (GLfloat x) 		{this->x = x;}
-		void set_y		 (GLfloat y) 		{this->y = y;}
-		void set_z		 (GLfloat z) 		{this->z = z;}
+		void set_x		 (GLfloat x) 		{this->x = x;calculateAngles();}
+		void set_y		 (GLfloat y) 		{this->y = y;calculateAngles();}
+		void set_z		 (GLfloat z) 		{this->z = z;calculateAngles();}
 		void set_xyAngle (Angle xyAngle) 	{this->xyAngle = xyAngle;}
 		void set_xzAngle (Angle xzAngle) 	{this->xzAngle = xzAngle;}
 		void set_yzAngle (Angle yzAngle) 	{this->yzAngle = yzAngle;}
@@ -121,30 +132,97 @@ class Vector3d {
 		void calculateComponents() {
 			GLfloat xz_angle = xzAngle.toRadians();
 			GLfloat xy_angle = xyAngle.toRadians();
+			GLfloat yz_angle = yzAngle.toRadians();
 
-			x = cos(xz_angle);
-			z = sin(xz_angle);
-			y = sin(xy_angle);
+			z = cos(xz_angle);
+			x = cos(xy_angle);
+			y = cos(yz_angle);
 		}
 
 		void calculateAngles() {
+
+			Angle xz = Angle(Angle::toGrades( atan( Angle::toRadians(x)/Angle::toRadians(z) )));
+			Angle yz = Angle(Angle::toGrades( atan( Angle::toRadians(z)/Angle::toRadians(y) )));
+			Angle xy = Angle(Angle::toGrades( atan( Angle::toRadians(y)/Angle::toRadians(x) )));
 			
+			this->xzAngle 	= Angle( resolveAngle( xz.get_angle(), z, x )) ;
+			this->yzAngle 	= Angle( resolveAngle( yz.get_angle(), y, z )) ;
+			this->xyAngle 	= Angle( resolveAngle( xy.get_angle(), x, y )) ;
 		}
 
 
-		void add_xzAngle(Angle a) {
-			xzAngle.add(a);
-			calculateComponents();
+		Vector3d unitVector(){
+			GLfloat magnitud = this->magnitud();
+			return Vector3d(x/magnitud, y/magnitud, z/magnitud);
 		}
 
-		void add_xyAngle(Angle a) {
-			xyAngle.add(a);
-			calculateComponents();
+		GLfloat magnitud() {
+			return sqrt(pow(x,2) + pow(y,2) + pow(z,2));
 		}
 
-		void add_yzAngle(int a) {
-			yzAngle.add(a);
-			calculateComponents();
+		GLfloat resolveAngle(GLfloat angle, GLfloat x, GLfloat y) {
+
+			if (x == 0.0 && y == 0.0){
+				return 0.0;
+			}
+			// primer cuadrante
+			if ( x > 0.0 && y >= 0.0 ){
+				if (angle >= 180.0 && angle <270.0) {
+					angle += 180.0;
+				} else {
+					angle = angle;
+				}
+			// segundo cuadrante
+			} else if( x <= 0.0 && y > 0.0){
+				if (angle >= 270.0 && angle <360.0) {
+					angle += 180.0;
+				} else {
+					angle = angle;
+				}
+			// tercer cuadrante
+			} else if(x < 0.0 && y <= 0.0){
+				if (angle >= 0.0 && angle <90.0) {
+					angle += 180.0;
+				} else {
+					angle = angle;
+				}
+			// cuarto cuadrante
+			} else if(x >= 0.0 && y < 0.0) {
+				if (angle >= 90.0 && angle <180.0) {
+					angle += 180.0;
+				} else {
+					angle = angle;
+				}
+			}	
+
+			return angle;
+		}
+
+		Vector3d add_xzAngle(Angle a) {
+			GLfloat zx = xzAngle.add(a).toRadians();
+
+			GLfloat z = cos(zx);
+			GLfloat x = sin(zx);
+			GLfloat d = y;
+			return Vector3d(x,d,z);
+		}
+
+		// void add_xyAngle(Angle a) {
+		// 	xyAngle.add(a);
+		// 	calculateComponents();
+		// }
+
+		Vector3d add_yzAngle(Angle a) {
+			GLfloat yz = yzAngle.add(a).toRadians();
+
+			GLfloat y = cos(yz);
+			GLfloat z = sin(yz);
+			GLfloat d = x;
+
+			// printf("y: %f", y);
+			// printf("z: %f\n", z);
+
+			return Vector3d(d,y,z);
 		}
 
 		void print() {
@@ -199,8 +277,57 @@ class Entity {
 
 		void addTarget(Point3d target) {
 			if (isLive) {
-				this->target = RelativeSpace::less(target, this->center);
+				this->target = RelativeSpace::less(target, this->center).unitVector();
 			}
+		}
+
+		Point3d getPosition() {
+			return center;
+		}
+
+		Point3d getVision() {
+			GLfloat x = target.get_x() + center.get_x();
+			GLfloat y = target.get_y() + center.get_y();
+			GLfloat z = target.get_z() + center.get_z();
+			return Point3d(x,y,z);
+		}
+
+		void xzMove(Angle angle) {
+			this->target = this->target.add_xzAngle(angle);
+		}
+
+		// void xyMove(Angle angle) {
+		// 	this->target.add_xyAngle(angle);
+		// }
+
+		void yzMove(Angle angle) {
+			this->target = this->target.add_yzAngle(Angle(angle.get_angle())) ;
+		}
+
+		void frontalMove(GLfloat speed) {
+			center.set_x( center.get_x() + target.get_x()*speed );
+			center.set_y( center.get_y() + target.get_y()*speed );
+			center.set_z( center.get_z() + target.get_z()*speed );
+		}
+
+		void backMove(GLfloat speed) {
+			center.set_x( center.get_x() - target.get_x()*speed );
+			center.set_y( center.get_y() - target.get_y()*speed );
+			center.set_z( center.get_z() - target.get_z()*speed );
+		}
+
+		void rightMove(GLfloat speed) {
+			Vector3d lateralVector = target.add_xzAngle(90);
+			center.set_x( center.get_x() - lateralVector.get_x()*speed );
+			center.set_y( center.get_y() - lateralVector.get_y()*speed );
+			center.set_z( center.get_z() - lateralVector.get_z()*speed );
+		}
+
+		void leftMove(GLfloat speed) {
+			Vector3d lateralVector = target.add_xzAngle(90);
+			center.set_x( center.get_x() + lateralVector.get_x()*speed );
+			center.set_y( center.get_y() + lateralVector.get_y()*speed );
+			center.set_z( center.get_z() + lateralVector.get_z()*speed );
 		}
 
 		virtual Entity& live() {
@@ -218,6 +345,7 @@ class Entity {
 			cout << "--------------------------------\n";
 			printf("Id: %d\n", id);
 			printf("Center: (%f, %f, %f)\n", center.get_x(), center.get_y(), center.get_z());
+			target.print();
 			cout << "--------------------------------\n\n";
 		}
 
@@ -334,7 +462,7 @@ World* world = World::getInstance();
 GLenum doubleBuffer;
 GLfloat worldVelocity = 0;
 
-Vector3d vision(Angle(0.0), Angle(270.0), Angle(0.0) );
+Entity player 	= EntitiesFactory::entity(Point3d(0.0, 0.0, 10.0)).solid().live();
 
 GLfloat zCam = 10.0, 
 		xCam = 0.0,
@@ -351,26 +479,25 @@ GLfloat toRadians(GLfloat degrees) {
 	return ( degrees * (PI / 180.0) );
 }
 
-void caculateCamRotation(void) {
-	xEye = xCam + vision.get_x();
-	zEye = zCam + vision.get_z();
-}
-
 void init(void) {
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glShadeModel (GL_FLAT);
 }
 
 void display(void) {
-   	caculateCamRotation();
   
    	glClear(GL_COLOR_BUFFER_BIT);
    	glColor3f (0.7, 0.0, 0.0);
-   	glLoadIdentity ();     
+   	glLoadIdentity ();   
+
+	// player.print();  	
+
+	Point3d position = player.getPosition();
+	Point3d vision	 = player.getVision();
 		   
-   	gluLookAt (xCam, yCam, zCam,  								// cam position
-   			  xEye , yEye, zEye, 								// target's cam 
-			  0.0, 1.0, 0.0);   								// up
+   	gluLookAt (position.get_x(), position.get_y(), position.get_z(),
+   			   vision.get_x(), vision.get_y(), vision.get_z(), 								
+			   0.0, 1.0, 0.0);   								// up
 
 	world->makeWorld();
 	
@@ -380,28 +507,19 @@ void display(void) {
 
 static void Key(unsigned char key, int x, int y) {
 
-	//Vector unitario para movimientos laterales
-	GLfloat toRad90 = toRadians(90.0);
-	GLfloat X_Lmove = vision.get_x()*cos(toRad90) - vision.get_z()*sin(toRad90);
-	GLfloat Z_Lmove = vision.get_x()*sin(toRad90) + vision.get_z()*cos(toRad90);
-
 	switch (key) {
 		// lineal moves
 		case FRONT_MOVE:
-			zCam += vision.get_z()*LINEAL_SPEED;
-			xCam += vision.get_x()*LINEAL_SPEED;
+			player.frontalMove(LINEAL_SPEED);
 			break;
 		case BACK_MOVE:
-			zCam -= vision.get_z()*LINEAL_SPEED;
-			xCam -= vision.get_x()*LINEAL_SPEED;
+			player.backMove(LINEAL_SPEED);
 			break;
 		case RIGTH_MOVE:
-			zCam += Z_Lmove*LINEAL_SPEED;
-			xCam += X_Lmove*LINEAL_SPEED;
+			player.rightMove(LINEAL_SPEED);
 			break;
 		case LEFT_MOVE:
-			zCam -= Z_Lmove*LINEAL_SPEED;
-			xCam -= X_Lmove*LINEAL_SPEED;
+			player.leftMove(LINEAL_SPEED);
 			break;
 
 		// otherwise
@@ -414,10 +532,16 @@ void SpecialInput(int key, int x, int y){
 	//Vector unitario para movimientos rotacionales
 	switch(key) {
 		case GLUT_KEY_LEFT:
-			vision.add_xzAngle( -ROTATIONAL_SPEED );
+			player.xzMove( Angle(ROTATIONAL_SPEED) );
 		break;
 		case GLUT_KEY_RIGHT:
-			vision.add_xzAngle(  ROTATIONAL_SPEED );
+			player.xzMove( Angle(-ROTATIONAL_SPEED) );
+		break;
+		case GLUT_KEY_UP:
+			player.yzMove( Angle(ROTATIONAL_SPEED) );
+		break;
+		case GLUT_KEY_DOWN:
+			player.yzMove( Angle(-ROTATIONAL_SPEED) );
 		break;
 	}
 
@@ -451,9 +575,7 @@ void createInitWorld() {
 	Box box2  		= EntitiesFactory::box(Point3d(-10.0, 0.0, 0.0), 7.0, 17.0, 7.0).solid();
 	Box box3 		= EntitiesFactory::box(Point3d(10.0, 0.0, 0.0), 7.0, 7.0, 7.0).solid();
 
-	Entity player 	= EntitiesFactory::entity(Point3d(0.0, 0.0, 10.0)).solid().live();
 	player.addTarget(Point3d(0.0, 0.0, 0.0));
-	player.get_target().print();
 
    	world->addEntity(&box1);
    	world->addEntity(&box2);
@@ -481,7 +603,7 @@ int main(int argc, char** argv) {
 
 	glutInitDisplayMode (type);
 	glutInitWindowSize (500, 500); 
-	glutInitWindowPosition (100, 100);
+	glutInitWindowPosition (800, 200);
 	glutCreateWindow (argv[0]);
 	createInitWorld();
 
